@@ -1,0 +1,10 @@
+Digitar o correto caminho do diretorio
+
+Bot Telegram/
+│
+├── main.py
+├── config.py
+└── handlers/
+    ├── cadastrar_servico.py
+    ├── consultar_servico.py
+

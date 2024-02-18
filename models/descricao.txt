@@ -1,0 +1,2 @@
+Pasta de Modelos: Se o seu projeto envolve o uso de modelos (por exemplo, para geração de mensagens ou documentos), 
+você pode ter uma pasta separada para armazenar esses modelos.
