@@ -1,2 +1,4 @@
 keys.env
 hsnauticabot-firebase.json
+**/__pycache__/
+downloads/

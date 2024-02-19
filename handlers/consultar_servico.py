@@ -1,4 +1,4 @@
-from handlers import message_texts
+from models import message_texts
 
 async def consultarServico (Client, message, db):
     chat = message.chat

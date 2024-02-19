@@ -1,18 +1,13 @@
 import re
-from pyrogram.types import (ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup)
-from pyromod import Client, Message 
+from pyrogram.types import (ReplyKeyboardMarkup)
 
-from utils import *
+from firebase_admin import firestore, storage
+import time
+
+from models import message_texts
 
 
-#Botões de modo geral, necessário agrupar futuramente
-botoes = InlineKeyboardMarkup( [
-            [InlineKeyboardButton('Cadastrar novo serviço realizado', callback_data='cadastrar')],
-            [InlineKeyboardButton('Consultar histórico de serviços', callback_data='consultar')],
-            [InlineKeyboardButton('Sair', callback_data='sair')]
-        ])
-
-async def cadastroServico (Client, message):
+async def cadastroServico (Client, message, db):
     chat = message.chat
 
     response = await chat.ask("Certo. Vamos iniciar o cadastro. Por favor me informe o Nome do veículo:")
@@ -34,26 +29,13 @@ async def cadastroServico (Client, message):
             await message.reply("Por favor, digite novamente a data no formato dd/mm/aaaa")
             dataManutencao = None
 
-    response = await chat.ask("Ótimo, agora me informe qual o tipo de serviço que foi feito:", reply_markup=ReplyKeyboardMarkup(
-        [
-            ['Troca de óleo', 'Revisão simples'],
-            ['Manutenção preventiva', 'Substituição de peças'],
-            ['Instalação de motor', 'Retirada de motor', 'Troca de motor'],
-            ['Instalação de gerador', 'Retirada de gerador', 'Revisão de gerador'],
-            ['']
-        ], resize_keyboard=False
-    ))
+    response = await chat.ask("Ótimo, agora me informe qual o tipo de serviço que foi feito:", reply_markup=message_texts.tipos_servicos)
     tipoServico = response.text
 
     response = await chat.ask("Qual o valor que foi cobrado pelo serviço?")
     valorRevisao = response.text
 
-    response = await chat.ask("Você deseja anexar fotos do serviço?", reply_markup=ReplyKeyboardMarkup(
-        [
-            ['Sim', 'Não'],
-            ['']
-        ], resize_keyboard=False
-    ))
+    response = await chat.ask("Você deseja anexar fotos do serviço?", reply_markup=message_texts.cliente_concorda)
     if response.text == "Sim":
         response = await chat.ask("Por favor, envie a foto do serviço.")
         if response.photo:
@@ -75,5 +57,31 @@ async def cadastroServico (Client, message):
                         \n**Valor da manutenção:** R$ {}""".format(nomeVeiculo, nomeCliente, kmVeiculo, dataManutencao, tipoServico, valorRevisao))
 
     # Mensagem final
-    await message.reply("Cadastro concluído com sucesso! \nVocê deseja fazer mais alguma coisa? ", reply_markup = botoes)
-    cadastrarDados(nomeVeiculo, nomeCliente, kmVeiculo, dataManutencao, tipoServico, valorRevisao, imagem, message.chat.username)
+    await message.reply("Cadastro concluído com sucesso! \nVocê deseja fazer mais alguma coisa? ", reply_markup = message_texts.botoes)
+    cadastrarDados(db, nomeVeiculo, nomeCliente, kmVeiculo, dataManutencao, tipoServico, valorRevisao, imagem, message.chat.username)
+
+def cadastrarDados(db, nomeVeiculo, nomeCliente, kmVeiculo, dataManutencao, tipoServico, valorRevisao, urlImagem, username):
+    doc_ref = db.collection("Revisoes").document(nomeVeiculo.upper())
+    doc_ref.set({
+        "nome veículo": nomeVeiculo.upper(),
+        "registros": firestore.ArrayUnion([{
+            "nome cliente": nomeCliente.upper(),
+            "KM veiculo": kmVeiculo,
+            "data manutencao": dataManutencao,
+            "tipo do servico": tipoServico.upper(),
+            "valor da manutenção": valorRevisao,
+            "Imagem anexada:": urlImagem,
+            "cadastrado por": username
+        }])
+    }, merge=True)
+
+async def upload_photo(photo_bytes):
+    filename = f"{time.asctime()}.jpg"
+
+    bucket = storage.bucket()
+    blob = bucket.blob(filename)
+    blob.upload_from_filename(photo_bytes)
+
+    blob.make_public()
+    url = blob.public_url
+    return url

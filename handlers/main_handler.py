@@ -2,9 +2,10 @@ from pyrogram import Client, filters
 from pyrogram.types import (ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup)
 from pyromod import Client, Message
 
-
-from handlers import message_texts
+from models import message_texts
 from handlers import consultar_servico
+from handlers import cadastrar_servico
+from handlers import leave_chat
 
 def executar_app(app, db):
     global id_inicio_mensagem, id_fim_mensagem
@@ -30,9 +31,10 @@ def executar_app(app, db):
         match opcaoEscolhida:
             case "cadastrar":
                 await app.delete_messages(chat_id, message_id)
-                #await cadastroServico(Client, callback_query.message)
+                await cadastrar_servico.cadastroServico(Client, callback_query.message, db)
             case "consultar":
+                await app.delete_messages(chat_id, message_id)
                 await consultar_servico.consultarServico(Client, callback_query.message, db)
             case "sair":
                 await app.delete_messages(chat_id, message_id)
-                #await end_chat(Client, callback_query.message)
+                await leave_chat.end_chat(Client, callback_query.message, app, id_inicio_mensagem, id_fim_mensagem)
