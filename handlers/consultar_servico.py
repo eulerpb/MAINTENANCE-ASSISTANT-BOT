@@ -1,7 +1,7 @@
-async def consultarServico (Client, message):
-    chat = message.chat
+from handlers import message_texts
 
-    
+async def consultarServico (Client, message, db):
+    chat = message.chat
 
     await message.reply("Estes são os cadastros já criados:")
     docs = db.collection("Revisoes").stream()
@@ -20,7 +20,7 @@ async def consultarServico (Client, message):
     else:
         print("No such document!")
 
-    await message.reply("Consulta finalizada! \nVocê deseja fazer mais alguma coisa? ", reply_markup = botoes)
+    await message.reply("Consulta finalizada! \nVocê deseja fazer mais alguma coisa? ", reply_markup = message_texts.botoes)
     
 
 

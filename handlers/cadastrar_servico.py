@@ -1,5 +1,4 @@
 import re
-from pyrogram import Client, filters
 from pyrogram.types import (ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup)
 from pyromod import Client, Message 
 
